@@ -1,0 +1,27 @@
+{
+    "name": "HoldMyBeer.Editor",
+    "rootNamespace": "HoldMyBeer.Editor",
+    "references": [
+        "HoldMyBeer.Core",
+        "HoldMyBeer.Networking",
+        "HoldMyBeer.Gameplay",
+        "HoldMyBeer.Player",
+        "HoldMyBeer.UI",
+        "Unity.Netcode.Runtime",
+        "Unity.Netcode.Components",
+        "Unity.Networking.Transport",
+        "HoldMyBeer.App",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

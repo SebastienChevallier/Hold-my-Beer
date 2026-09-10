@@ -1,0 +1,19 @@
+{
+    "name": "HoldMyBeer.Player",
+    "rootNamespace": "HoldMyBeer.Player",
+    "references": [
+        "HoldMyBeer.Core",
+        "Unity.Netcode.Runtime",
+        "Unity.Netcode.Components",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
