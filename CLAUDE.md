@@ -245,6 +245,7 @@ spawne pour des clients qui n'ont pas encore la scène.
 | Le host démarre mais personne ne rejoint | pare-feu / port 7777 fermé | passer en mode **Relay** |
 | `FixedString32Bytes` non résolu | l'assembly qui lit un champ répliqué doit référencer `Unity.Collections` | ajouté aux `.asmdef` concernés |
 | API Relay introuvable (`AllocationUtils`, `RelayServerData`) | ces helpers bougent d'une version de transport à l'autre | `SetRelayServerData` en octets bruts, stable depuis NGO 1.x |
+| `manifest.json` : *Duplicate key found* | le fichier a été réordonné à la main, puis le Package Manager a réécrit **son** bloc sans reconnaître l'ancien | ne jamais retrier `manifest.json` : éditer une valeur sur place, laisser l'ordre d'Unity |
 
 ---
 
