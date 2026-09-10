@@ -23,6 +23,7 @@ namespace HoldMyBeer.UI
         private Text _joinCodeLabel;
         private Text _statusLabel;
         private Button _actionButton;
+        private Button _copyCodeButton;
         private Text _actionLabel;
         private ILobbyState _lobby;
         private bool _localReady;
@@ -41,6 +42,7 @@ namespace HoldMyBeer.UI
 
             UiFactory.CreateLabel(panel, "LOBBY", 44, TextAnchor.MiddleCenter);
             _joinCodeLabel = UiFactory.CreateLabel(panel, string.Empty, 24, TextAnchor.MiddleCenter);
+            _copyCodeButton = UiFactory.CreateButton(panel, "COPY CODE", CopyJoinCode);
 
             UiFactory.CreateLabel(panel, "Players", 22);
             var list = UiFactory.CreatePanel(panel, "PlayerList", new Vector2(640f, 320f));
@@ -130,6 +132,21 @@ namespace HoldMyBeer.UI
             Refresh();
         }
 
+        /// <summary>
+        /// A build has no console to read the code from, and it has to travel to a
+        /// friend over chat, so put it on the clipboard.
+        /// </summary>
+        private void CopyJoinCode()
+        {
+            if (string.IsNullOrEmpty(_session.JoinCode))
+            {
+                return;
+            }
+
+            GUIUtility.systemCopyBuffer = _session.JoinCode;
+            _statusLabel.text = "Join code copied to the clipboard.";
+        }
+
         private void Refresh()
         {
             if (!_root.activeSelf)
@@ -137,9 +154,11 @@ namespace HoldMyBeer.UI
                 return;
             }
 
-            _joinCodeLabel.text = string.IsNullOrEmpty(_session.JoinCode)
-                ? "Direct IP session - share your local or public IP"
-                : $"Join code: {_session.JoinCode}";
+            var hasJoinCode = !string.IsNullOrEmpty(_session.JoinCode);
+            _joinCodeLabel.text = hasJoinCode
+                ? $"Join code: {_session.JoinCode}"
+                : "Direct IP session - share your local or public IP";
+            _copyCodeButton.gameObject.SetActive(hasJoinCode);
 
             if (_lobby == null)
             {

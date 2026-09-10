@@ -23,6 +23,28 @@ l'absence de bootstrap et le signalent dans la console au lieu de planter en sil
 Tester à plusieurs sur une machine : `Window > Multiplayer > Multiplayer Play Mode`
 (virtual players), ou un build + l'éditeur, en mode **Direct IP** sur `127.0.0.1`.
 
+### Tester sur deux réseaux différents
+
+Direct IP ne passe pas d'un réseau à l'autre sans ouvrir un port. Trois options,
+de la plus propre à la plus rapide :
+
+1. **Relay** (le mode prévu pour ça). Une fois : `Project Settings > Services` →
+   lier le projet à une organisation UGS, puis activer **Relay** dans le dashboard
+   Unity. Ensuite, dans le menu : *Switch mode* → Relay → **CREATE** ; le lobby
+   affiche un code, *COPY CODE* le met dans le presse-papier. L'autre joueur colle
+   le code et fait **JOIN**.
+2. **VPN maillé** (Tailscale, ZeroTier). Les deux machines se retrouvent sur un
+   même réseau virtuel : on reste en **Direct IP** avec l'IP fournie par le VPN,
+   sans compte UGS ni dashboard. Très pratique pour débugger, puisque c'est le
+   même chemin de code qu'en LAN.
+3. **Port forwarding** : le host ouvre l'UDP `7777` sur sa box et partage son IP
+   publique. Ça marche, mais ça dépend de la box et ça n'est pas demandable à un
+   joueur.
+
+**Les deux machines doivent lancer le même build.** `BuildVersionPolicy` refuse
+les versions différentes, et surtout la `NetworkPrefabsList` est hashée : deux
+commits différents = déconnexion à l'approbation.
+
 ---
 
 ## 2. Topologie : host-client, pas de serveur dédié
@@ -203,9 +225,19 @@ spawne pour des clients qui n'ont pas encore la scène.
 ## 5. Ajouter une fonctionnalité — recettes
 
 **Un nouveau mode de transport (Steam, LAN discovery…)**
-1. Implémenter `ISessionTransport`.
-2. Implémenter `ISessionTransportInstaller` dans la même assembly.
-3. Rien d'autre : le bootstrap le découvre par réflexion.
+1. Ajouter la valeur dans l'enum `SessionMode`.
+2. Implémenter `ISessionTransport`. Le transport **possède** son composant : il
+   appelle `NetworkTransportActivator.Activate<TonTransport>(networkManager)` dans
+   `ConfigureHostAsync` / `ConfigureClientAsync`, ce qui l'ajoute si besoin et le
+   rend actif. Obligatoire même si tu réutilises `UnityTransport` : la tentative
+   précédente a pu laisser un autre mode en place.
+3. Implémenter `ISessionTransportInstaller` dans la même assembly.
+4. Rien d'autre : le bootstrap le découvre par réflexion, la session et l'UI ne
+   bougent pas.
+
+> Un transport Steam n'est **pas** un `UnityTransport` configuré, c'est un autre
+> composant `NetworkTransport`. C'est pour ça que l'installer reçoit le
+> `NetworkManager` et non un transport déjà résolu.
 
 **Une nouvelle règle d'entrée** → une classe `IConnectionApprovalPolicy`, ajoutée dans
 `GameBootstrapper.BuildContainer()`.

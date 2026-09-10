@@ -2,7 +2,6 @@ using HoldMyBeer.Core;
 using HoldMyBeer.Gameplay;
 using HoldMyBeer.Networking;
 using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 
 namespace HoldMyBeer.App
@@ -90,9 +89,8 @@ namespace HoldMyBeer.App
             var profile = new PlayerPrefsPlayerProfile();
             container.Register<IPlayerProfile>(profile);
 
-            var transport = networkManager.GetComponent<UnityTransport>();
             var transportProvider = new SessionTransportProvider();
-            foreach (var sessionTransport in TransportInstallerScanner.DiscoverTransports(transport))
+            foreach (var sessionTransport in TransportInstallerScanner.DiscoverTransports(networkManager))
             {
                 transportProvider.Register(sessionTransport);
             }
@@ -124,12 +122,6 @@ namespace HoldMyBeer.App
             if (networkManager == null)
             {
                 Debug.LogError("GameBootstrapper: no NetworkManager in the Boot scene.");
-                return false;
-            }
-
-            if (networkManager.GetComponent<UnityTransport>() == null)
-            {
-                Debug.LogError("GameBootstrapper: the NetworkManager has no UnityTransport component.");
                 return false;
             }
 

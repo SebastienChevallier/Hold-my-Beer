@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Unity.Netcode.Transports.UTP;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace HoldMyBeer.Networking
@@ -11,7 +11,7 @@ namespace HoldMyBeer.Networking
     /// </summary>
     public static class TransportInstallerScanner
     {
-        public static IEnumerable<ISessionTransport> DiscoverTransports(UnityTransport transport)
+        public static IEnumerable<ISessionTransport> DiscoverTransports(NetworkManager networkManager)
         {
             var results = new List<ISessionTransport>();
             var contract = typeof(ISessionTransportInstaller);
@@ -44,7 +44,7 @@ namespace HoldMyBeer.Networking
                     try
                     {
                         var installer = (ISessionTransportInstaller)Activator.CreateInstance(type);
-                        results.Add(installer.Create(transport));
+                        results.Add(installer.Create(networkManager));
                     }
                     catch (Exception exception)
                     {
