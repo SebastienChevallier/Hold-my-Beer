@@ -43,12 +43,11 @@
     "com.unity.modules.xr": "1.0.0",
     "com.unity.netcode.gameobjects": "2.4.4",
     "com.unity.render-pipelines.universal": "17.6.0",
-    "com.unity.services.authentication": "3.4.1",
-    "com.unity.services.core": "1.14.0",
+    "com.unity.services.authentication": "3.7.4",
+    "com.unity.services.core": "1.18.0",
     "com.unity.services.relay": "1.1.1",
     "com.unity.test-framework": "1.8.0",
     "com.unity.timeline": "6.6.0",
-    "com.unity.transport": "2.4.0",
     "com.unity.ugui": "2.6.0",
     "com.unity.visualscripting": "1.9.12"
   }
