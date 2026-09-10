@@ -243,6 +243,8 @@ spawne pour des clients qui n'ont pas encore la scène.
 | Un joueur n'a pas d'avatar | spawn avant que sa scène soit prête | attente d'`OnLoadEventCompleted` |
 | La souris tourne 10× trop vite | `Mouse.delta` multiplié par `deltaTime` | non multiplié dans `KeyboardMousePlayerInputSource` |
 | Le host démarre mais personne ne rejoint | pare-feu / port 7777 fermé | passer en mode **Relay** |
+| `FixedString32Bytes` non résolu | l'assembly qui lit un champ répliqué doit référencer `Unity.Collections` | ajouté aux `.asmdef` concernés |
+| API Relay introuvable (`AllocationUtils`, `RelayServerData`) | ces helpers bougent d'une version de transport à l'autre | `SetRelayServerData` en octets bruts, stable depuis NGO 1.x |
 
 ---
 

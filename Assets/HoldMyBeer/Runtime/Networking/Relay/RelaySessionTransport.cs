@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using HoldMyBeer.Networking;
 using Unity.Netcode.Transports.UTP;
-using Unity.Networking.Transport.Relay;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Relay;
+using Unity.Services.Relay.Models;
 using UnityEngine;
 
 namespace HoldMyBeer.Networking.Relay
@@ -47,7 +48,21 @@ namespace HoldMyBeer.Networking.Relay
                 var allocation = await RelayService.Instance.CreateAllocationAsync(maxConnections);
                 var joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
 
-                _transport.SetRelayServerData(AllocationUtils.ToRelayServerData(allocation, ConnectionType));
+                var endpoint = ResolveEndpoint(allocation.ServerEndpoints);
+                if (endpoint == null)
+                {
+                    return SessionResult.Fail($"Relay returned no '{ConnectionType}' endpoint.");
+                }
+
+                _transport.SetRelayServerData(
+                    endpoint.Host,
+                    (ushort)endpoint.Port,
+                    allocation.AllocationIdBytes,
+                    allocation.Key,
+                    allocation.ConnectionData,
+                    null,
+                    endpoint.Secure);
+
                 return SessionResult.Ok(joinCode);
             }
             catch (Exception exception)
@@ -72,13 +87,54 @@ namespace HoldMyBeer.Networking.Relay
             try
             {
                 var allocation = await RelayService.Instance.JoinAllocationAsync(request.JoinCode);
-                _transport.SetRelayServerData(AllocationUtils.ToRelayServerData(allocation, ConnectionType));
+
+                var endpoint = ResolveEndpoint(allocation.ServerEndpoints);
+                if (endpoint == null)
+                {
+                    return SessionResult.Fail($"Relay returned no '{ConnectionType}' endpoint.");
+                }
+
+                // A client must also pass the host's connection data, otherwise the
+                // relay has no idea which allocation to forward its traffic to.
+                _transport.SetRelayServerData(
+                    endpoint.Host,
+                    (ushort)endpoint.Port,
+                    allocation.AllocationIdBytes,
+                    allocation.Key,
+                    allocation.ConnectionData,
+                    allocation.HostConnectionData,
+                    endpoint.Secure);
+
                 return SessionResult.Ok(request.JoinCode);
             }
             catch (Exception exception)
             {
                 return SessionResult.Fail($"Could not join code '{request.JoinCode}': {exception.Message}");
             }
+        }
+
+        /// <summary>
+        /// Relay advertises several endpoints (udp, dtls, wss). We want the encrypted
+        /// one; falling back to the first offered keeps the game connectable if the
+        /// service ever stops advertising dtls.
+        /// </summary>
+        private static RelayServerEndpoint ResolveEndpoint(List<RelayServerEndpoint> endpoints)
+        {
+            if (endpoints == null || endpoints.Count == 0)
+            {
+                return null;
+            }
+
+            foreach (var endpoint in endpoints)
+            {
+                if (string.Equals(endpoint.ConnectionType, ConnectionType, StringComparison.OrdinalIgnoreCase))
+                {
+                    return endpoint;
+                }
+            }
+
+            Debug.LogWarning($"Relay offered no '{ConnectionType}' endpoint; using '{endpoints[0].ConnectionType}'.");
+            return endpoints[0];
         }
 
         private static async Task<SessionResult> EnsureSignedInAsync()
