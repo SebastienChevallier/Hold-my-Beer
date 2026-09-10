@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Unity.Netcode.Transports.UTP;
+using Unity.Netcode;
 
 namespace HoldMyBeer.Networking
 {
@@ -13,18 +13,23 @@ namespace HoldMyBeer.Networking
     {
         private const string ListenOnAllInterfaces = "0.0.0.0";
 
-        private readonly UnityTransport _transport;
+        private readonly NetworkManager _networkManager;
 
-        public DirectIpSessionTransport(UnityTransport transport)
+        public DirectIpSessionTransport(NetworkManager networkManager)
         {
-            _transport = transport != null ? transport : throw new ArgumentNullException(nameof(transport));
+            _networkManager = networkManager != null
+                ? networkManager
+                : throw new ArgumentNullException(nameof(networkManager));
         }
 
         public SessionMode Mode => SessionMode.DirectIp;
 
         public Task<SessionResult> ConfigureHostAsync(SessionRequest request)
         {
-            _transport.SetConnectionData(SessionRequest.LoopbackAddress, request.Port, ListenOnAllInterfaces);
+            var transport = NetworkTransportActivator
+                .Activate<Unity.Netcode.Transports.UTP.UnityTransport>(_networkManager);
+
+            transport.SetConnectionData(SessionRequest.LoopbackAddress, request.Port, ListenOnAllInterfaces);
             return Task.FromResult(SessionResult.Ok());
         }
 
@@ -35,7 +40,10 @@ namespace HoldMyBeer.Networking
                 return Task.FromResult(SessionResult.Fail("Enter the host's IP address."));
             }
 
-            _transport.SetConnectionData(request.Address, request.Port);
+            var transport = NetworkTransportActivator
+                .Activate<Unity.Netcode.Transports.UTP.UnityTransport>(_networkManager);
+
+            transport.SetConnectionData(request.Address, request.Port);
             return Task.FromResult(SessionResult.Ok());
         }
     }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using HoldMyBeer.Networking;
+using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
@@ -24,11 +25,13 @@ namespace HoldMyBeer.Networking.Relay
     {
         private const string ConnectionType = "dtls";
 
-        private readonly UnityTransport _transport;
+        private readonly NetworkManager _networkManager;
 
-        public RelaySessionTransport(UnityTransport transport)
+        public RelaySessionTransport(NetworkManager networkManager)
         {
-            _transport = transport != null ? transport : throw new ArgumentNullException(nameof(transport));
+            _networkManager = networkManager != null
+                ? networkManager
+                : throw new ArgumentNullException(nameof(networkManager));
         }
 
         public SessionMode Mode => SessionMode.Relay;
@@ -54,7 +57,7 @@ namespace HoldMyBeer.Networking.Relay
                     return SessionResult.Fail($"Relay returned no '{ConnectionType}' endpoint.");
                 }
 
-                _transport.SetRelayServerData(
+                NetworkTransportActivator.Activate<UnityTransport>(_networkManager).SetRelayServerData(
                     endpoint.Host,
                     (ushort)endpoint.Port,
                     allocation.AllocationIdBytes,
@@ -96,7 +99,7 @@ namespace HoldMyBeer.Networking.Relay
 
                 // A client must also pass the host's connection data, otherwise the
                 // relay has no idea which allocation to forward its traffic to.
-                _transport.SetRelayServerData(
+                NetworkTransportActivator.Activate<UnityTransport>(_networkManager).SetRelayServerData(
                     endpoint.Host,
                     (ushort)endpoint.Port,
                     allocation.AllocationIdBytes,

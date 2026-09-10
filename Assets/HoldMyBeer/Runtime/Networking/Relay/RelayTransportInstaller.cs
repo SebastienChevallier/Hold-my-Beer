@@ -1,5 +1,5 @@
 using HoldMyBeer.Networking;
-using Unity.Netcode.Transports.UTP;
+using Unity.Netcode;
 
 namespace HoldMyBeer.Networking.Relay
 {
@@ -9,6 +9,7 @@ namespace HoldMyBeer.Networking.Relay
     /// </summary>
     public sealed class RelayTransportInstaller : ISessionTransportInstaller
     {
-        public ISessionTransport Create(UnityTransport transport) => new RelaySessionTransport(transport);
+        public ISessionTransport Create(NetworkManager networkManager) =>
+            new RelaySessionTransport(networkManager);
     }
 }

@@ -68,6 +68,12 @@ La découverte par `ISessionTransportInstaller` va plus loin : l'assembly Relay 
 être supprimée du projet sans qu'aucune autre ligne ne change. C'est ce qui permet de
 livrer un build LAN sans dépendance à Unity Gaming Services.
 
+L'interface a d'abord reçu un `UnityTransport` tout résolu, ce qui était une fuite
+d'abstraction : ça supposait que tous les modes tournent sur le même composant. C'est
+vrai de Direct IP et de Relay, mais faux dès qu'on parle de Steam sockets, qui sont un
+`NetworkTransport` différent. L'installer reçoit donc le `NetworkManager`, et chaque
+mode installe et active le composant dont il a besoin via `NetworkTransportActivator`.
+
 ### L'échec réseau est une valeur, pas une exception
 `SessionResult` porte `Success` / `Error`. Une connexion échoue constamment et pour
 des raisons banales (mauvaise IP, port fermé, session pleine, version différente) :

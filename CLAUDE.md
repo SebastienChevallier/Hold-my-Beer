@@ -225,9 +225,19 @@ spawne pour des clients qui n'ont pas encore la scène.
 ## 5. Ajouter une fonctionnalité — recettes
 
 **Un nouveau mode de transport (Steam, LAN discovery…)**
-1. Implémenter `ISessionTransport`.
-2. Implémenter `ISessionTransportInstaller` dans la même assembly.
-3. Rien d'autre : le bootstrap le découvre par réflexion.
+1. Ajouter la valeur dans l'enum `SessionMode`.
+2. Implémenter `ISessionTransport`. Le transport **possède** son composant : il
+   appelle `NetworkTransportActivator.Activate<TonTransport>(networkManager)` dans
+   `ConfigureHostAsync` / `ConfigureClientAsync`, ce qui l'ajoute si besoin et le
+   rend actif. Obligatoire même si tu réutilises `UnityTransport` : la tentative
+   précédente a pu laisser un autre mode en place.
+3. Implémenter `ISessionTransportInstaller` dans la même assembly.
+4. Rien d'autre : le bootstrap le découvre par réflexion, la session et l'UI ne
+   bougent pas.
+
+> Un transport Steam n'est **pas** un `UnityTransport` configuré, c'est un autre
+> composant `NetworkTransport`. C'est pour ça que l'installer reçoit le
+> `NetworkManager` et non un transport déjà résolu.
 
 **Une nouvelle règle d'entrée** → une classe `IConnectionApprovalPolicy`, ajoutée dans
 `GameBootstrapper.BuildContainer()`.
