@@ -1,0 +1,22 @@
+{
+    "name": "HoldMyBeer.App",
+    "rootNamespace": "HoldMyBeer.App",
+    "references": [
+        "HoldMyBeer.Core",
+        "HoldMyBeer.Networking",
+        "HoldMyBeer.Gameplay",
+        "HoldMyBeer.Player",
+        "HoldMyBeer.UI",
+        "Unity.Netcode.Runtime",
+        "Unity.Networking.Transport"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

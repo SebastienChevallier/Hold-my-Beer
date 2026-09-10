@@ -1,0 +1,23 @@
+{
+    "name": "HoldMyBeer.Networking.Relay",
+    "rootNamespace": "HoldMyBeer.Networking.Relay",
+    "references": [
+        "HoldMyBeer.Core",
+        "HoldMyBeer.Networking",
+        "Unity.Netcode.Runtime",
+        "Unity.Networking.Transport",
+        "Unity.Services.Core",
+        "Unity.Services.Authentication",
+        "Unity.Services.Relay",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
