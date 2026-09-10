@@ -37,8 +37,12 @@ namespace HoldMyBeer.UI
 
             var canvas = UiFactory.CreateCanvas("MenuCanvas");
 
+            var invites = container.Resolve<ISessionInviteService>();
+
             _menuScreen = new MainMenuScreen(
                 _session,
+                container.Resolve<ISessionTransportProvider>(),
+                invites,
                 container.Resolve<ILobbyLauncher>(),
                 container.Resolve<IPlayerProfile>(),
                 () => SwitchTo(_lobbyScreen));
@@ -46,6 +50,7 @@ namespace HoldMyBeer.UI
             _lobbyScreen = new LobbyScreen(
                 container.Resolve<ILobbyProvider>(),
                 _session,
+                invites,
                 () => SwitchTo(_menuScreen));
 
             _menuScreen.Build(canvas.transform);
@@ -69,6 +74,7 @@ namespace HoldMyBeer.UI
                 _session.SessionEnded -= HandleSessionEnded;
             }
 
+            _menuScreen?.Dispose();
             _lobbyScreen?.Dispose();
         }
 

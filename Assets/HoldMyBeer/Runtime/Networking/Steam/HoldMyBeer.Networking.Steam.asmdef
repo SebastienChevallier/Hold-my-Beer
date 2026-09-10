@@ -1,0 +1,19 @@
+{
+    "name": "HoldMyBeer.Networking.Steam",
+    "rootNamespace": "HoldMyBeer.Networking.Steam",
+    "references": [
+        "HoldMyBeer.Core",
+        "HoldMyBeer.Networking",
+        "Unity.Netcode.Runtime",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

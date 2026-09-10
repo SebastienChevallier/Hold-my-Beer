@@ -78,6 +78,76 @@ namespace HoldMyBeer.UI
             return rect;
         }
 
+        /// <summary>
+        /// A panel pinned to the right edge of the screen instead of the centre.
+        ///
+        /// Parent it to the canvas, not to another panel: dropping it inside a
+        /// VerticalLayoutGroup makes it push its siblings off-screen, which is exactly
+        /// what a secondary panel must never do to the screen it belongs to.
+        /// </summary>
+        public static RectTransform CreateSidePanel(Transform parent, string name, Vector2 size,
+                                                    float margin = 48f)
+        {
+            var rect = CreatePanel(parent, name, size);
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 0.5f);
+            rect.anchoredPosition = new Vector2(-margin, 0f);
+            return rect;
+        }
+
+        /// <summary>
+        /// A vertical scrolling area. Returns the content transform: add children to it
+        /// exactly as to a panel, and it grows and scrolls on its own.
+        ///
+        /// The ContentSizeFitter is what makes the scrollbar meaningful - without it the
+        /// content keeps the viewport height and rows simply overflow, visible but
+        /// unreachable.
+        /// </summary>
+        public static RectTransform CreateScrollList(Transform parent, float height)
+        {
+            var rootGo = new GameObject("ScrollList", typeof(RectTransform), typeof(ScrollRect),
+                typeof(LayoutElement));
+            rootGo.transform.SetParent(parent, false);
+
+            var layoutElement = rootGo.GetComponent<LayoutElement>();
+            layoutElement.minHeight = height;
+            layoutElement.preferredHeight = height;
+            layoutElement.flexibleHeight = 0f;
+
+            var viewportGo = new GameObject("Viewport", typeof(RectTransform), typeof(RectMask2D));
+            viewportGo.transform.SetParent(rootGo.transform, false);
+            var viewport = (RectTransform)viewportGo.transform;
+            StretchToParent(viewport);
+
+            var contentGo = new GameObject("Content", typeof(RectTransform), typeof(VerticalLayoutGroup),
+                typeof(ContentSizeFitter));
+            contentGo.transform.SetParent(viewportGo.transform, false);
+
+            var content = (RectTransform)contentGo.transform;
+            content.anchorMin = new Vector2(0f, 1f);
+            content.anchorMax = new Vector2(1f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.sizeDelta = new Vector2(0f, 0f);
+
+            var contentLayout = contentGo.GetComponent<VerticalLayoutGroup>();
+            contentLayout.spacing = 8f;
+            contentLayout.childForceExpandHeight = false;
+            contentLayout.childControlHeight = true;
+            contentLayout.childControlWidth = true;
+            contentLayout.childAlignment = TextAnchor.UpperCenter;
+
+            contentGo.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var scroll = rootGo.GetComponent<ScrollRect>();
+            scroll.content = content;
+            scroll.viewport = viewport;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 30f;
+
+            return content;
+        }
+
         public static Text CreateLabel(Transform parent, string content, int fontSize = 26,
                                        TextAnchor anchor = TextAnchor.MiddleLeft)
         {

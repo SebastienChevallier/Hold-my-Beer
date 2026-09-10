@@ -33,6 +33,7 @@ namespace HoldMyBeer.App
         private bool _ownsContainer;
         private ConnectionApprovalHandler _approval;
         private NetworkSessionService _session;
+        private ISessionInviteService _invites;
 
         private void Awake()
         {
@@ -65,6 +66,7 @@ namespace HoldMyBeer.App
 
             _session?.Dispose();
             _approval?.Dispose();
+            (_invites as System.IDisposable)?.Dispose();
             AppServices.Clear();
         }
 
@@ -90,12 +92,30 @@ namespace HoldMyBeer.App
             container.Register<IPlayerProfile>(profile);
 
             var transportProvider = new SessionTransportProvider();
-            foreach (var sessionTransport in TransportInstallerScanner.DiscoverTransports(networkManager))
+            foreach (var sessionTransport in InstallerScanner.DiscoverTransports(networkManager))
             {
                 transportProvider.Register(sessionTransport);
             }
 
             container.Register<ISessionTransportProvider>(transportProvider);
+
+            // Whatever platform is present wins; with none, the null object keeps the
+            // menu free of "is there an invite service?" branches.
+            _invites = new NullSessionInviteService();
+            foreach (var inviteService in InstallerScanner.DiscoverInviteServices(networkManager))
+            {
+                _invites = inviteService;
+                break;
+            }
+
+            container.Register(_invites);
+
+            // The platform account beats anything typed in a box: it is the name the
+            // player's friends already know them by.
+            if (_invites is IPlatformIdentity { HasIdentity: true } identity)
+            {
+                profile.SetDisplayName(identity.DisplayName);
+            }
 
             _session = new NetworkSessionService(networkManager, transportProvider, profile);
             container.Register<INetworkSessionService>(_session);

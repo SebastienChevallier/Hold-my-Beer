@@ -15,8 +15,10 @@ namespace HoldMyBeer.UI
     {
         private readonly ILobbyProvider _lobbyProvider;
         private readonly INetworkSessionService _session;
+        private readonly ISessionInviteService _invites;
         private readonly Action _onLeave;
         private readonly List<Text> _rows = new();
+        private readonly List<Button> _friendRows = new();
 
         private GameObject _root;
         private Transform _listRoot;
@@ -24,14 +26,20 @@ namespace HoldMyBeer.UI
         private Text _statusLabel;
         private Button _actionButton;
         private Button _copyCodeButton;
+        private Button _inviteButton;
+        private RectTransform _invitePanel;
+        private RectTransform _friendList;
+        private Text _inviteHint;
         private Text _actionLabel;
         private ILobbyState _lobby;
         private bool _localReady;
 
-        public LobbyScreen(ILobbyProvider lobbyProvider, INetworkSessionService session, Action onLeave)
+        public LobbyScreen(ILobbyProvider lobbyProvider, INetworkSessionService session,
+                          ISessionInviteService invites, Action onLeave)
         {
             _lobbyProvider = lobbyProvider;
             _session = session;
+            _invites = invites;
             _onLeave = onLeave;
         }
 
@@ -43,6 +51,18 @@ namespace HoldMyBeer.UI
             UiFactory.CreateLabel(panel, "LOBBY", 44, TextAnchor.MiddleCenter);
             _joinCodeLabel = UiFactory.CreateLabel(panel, string.Empty, 24, TextAnchor.MiddleCenter);
             _copyCodeButton = UiFactory.CreateButton(panel, "COPY CODE", CopyJoinCode);
+
+            // The whole point of the Steam mode: the host waits here, so this is where
+            // inviting friends belongs.
+            _inviteButton = UiFactory.CreateButton(panel, "INVITE FRIENDS", ToggleInvitePanel);
+
+            // Parented to the canvas rather than to the lobby panel, and pinned to the
+            // side: inside the panel's vertical layout it pushed the lobby off-screen.
+            _invitePanel = UiFactory.CreateSidePanel(root, "FriendPicker", new Vector2(420f, 620f));
+            UiFactory.CreateLabel(_invitePanel, "INVITE A FRIEND", 26, TextAnchor.MiddleCenter);
+            _inviteHint = UiFactory.CreateLabel(_invitePanel, string.Empty, 18, TextAnchor.MiddleCenter);
+            _friendList = UiFactory.CreateScrollList(_invitePanel, 480f);
+            _invitePanel.gameObject.SetActive(false);
 
             UiFactory.CreateLabel(panel, "Players", 22);
             var list = UiFactory.CreatePanel(panel, "PlayerList", new Vector2(640f, 320f));
@@ -73,6 +93,8 @@ namespace HoldMyBeer.UI
 
         public void Hide()
         {
+            _invitePanel.gameObject.SetActive(false);
+
             if (_lobby != null)
             {
                 _lobby.Changed -= Refresh;
@@ -132,6 +154,63 @@ namespace HoldMyBeer.UI
             Refresh();
         }
 
+        private void ToggleInvitePanel()
+        {
+            var show = !_invitePanel.gameObject.activeSelf;
+            _invitePanel.gameObject.SetActive(show);
+
+            if (show)
+            {
+                RefreshFriends();
+            }
+        }
+
+        /// <summary>
+        /// Our own picker rather than the platform overlay, which only exists when the
+        /// platform launched the game and would otherwise force the player through
+        /// shortcut gymnastics. Rebuilt on every open, because who is online changes.
+        /// </summary>
+        private void RefreshFriends()
+        {
+            var friends = _invites.ListInvitableFriends();
+
+            // No cap any more: the list scrolls, so showing everyone is the whole point.
+            while (_friendRows.Count < friends.Count)
+            {
+                _friendRows.Add(UiFactory.CreateButton(_friendList, string.Empty, () => { }));
+            }
+
+            for (var i = 0; i < _friendRows.Count; i++)
+            {
+                var row = _friendRows[i];
+                if (i >= friends.Count)
+                {
+                    row.gameObject.SetActive(false);
+                    continue;
+                }
+
+                var friend = friends[i];
+                row.gameObject.SetActive(true);
+                row.GetComponentInChildren<Text>().text =
+                    friend.IsPlayingThisGame ? $"{friend.Name}  (in game)" : friend.Name;
+
+                // Rebound every refresh: the row is reused for a different friend.
+                row.onClick.RemoveAllListeners();
+                row.onClick.AddListener(() => InviteFriend(friend));
+            }
+
+            _inviteHint.text = friends.Count == 0
+                ? "No friends online right now."
+                : $"{friends.Count} friends online";
+        }
+
+        private void InviteFriend(PlatformFriend friend)
+        {
+            _statusLabel.text = _invites.Invite(friend.Id)
+                ? $"Invitation sent to {friend.Name}."
+                : $"Steam refused the invitation to {friend.Name}.";
+        }
+
         /// <summary>
         /// A build has no console to read the code from, and it has to travel to a
         /// friend over chat, so put it on the clipboard.
@@ -152,6 +231,16 @@ namespace HoldMyBeer.UI
             if (!_root.activeSelf)
             {
                 return;
+            }
+
+            var canInvite = _invites.IsAvailable && _session.IsHost;
+            _inviteButton.gameObject.SetActive(canInvite);
+
+            // A client that was promoted into this screen must not keep a picker open
+            // for a lobby it does not own.
+            if (!canInvite)
+            {
+                _invitePanel.gameObject.SetActive(false);
             }
 
             var hasJoinCode = !string.IsNullOrEmpty(_session.JoinCode);
