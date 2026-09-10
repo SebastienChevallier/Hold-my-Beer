@@ -91,9 +91,18 @@ namespace HoldMyBeer.UI
                 : "Mode: Relay (over the internet, needs a linked UGS project)";
             _addressField.placeholder.GetComponent<Text>().text = isDirect ? "Host IP" : "Join code";
 
-            if (isDirect && string.IsNullOrWhiteSpace(_addressField.text))
+            // Switching modes must not leave the previous mode's value behind: a
+            // leftover "127.0.0.1" would be sent to Relay as a join code.
+            if (isDirect)
             {
-                _addressField.text = SessionRequest.LoopbackAddress;
+                if (string.IsNullOrWhiteSpace(_addressField.text))
+                {
+                    _addressField.text = SessionRequest.LoopbackAddress;
+                }
+            }
+            else if (_addressField.text == SessionRequest.LoopbackAddress)
+            {
+                _addressField.text = string.Empty;
             }
         }
 
